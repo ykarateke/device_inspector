@@ -3,9 +3,9 @@ description: >-
   Flutter device analysis SDK. Provides device, system, hardware,
   performance, and security information through a single standard API.
 version: 0.1.0
-homepage: https://github.com/bearcodestudio/device_inspector
-repository: https://github.com/bearcodestudio/device_inspector
-issue_tracker: https://github.com/bearcodestudio/device_inspector/issues
+homepage: https://github.com/ykarateke/device_inspector
+repository: https://github.com/ykarateke/device_inspector
+issue_tracker: https://github.com/ykarateke/device_inspector/issues
 
 environment:
   sdk: ">=3.4.0 <4.0.0"

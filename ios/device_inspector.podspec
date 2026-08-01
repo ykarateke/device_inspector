@@ -6,7 +6,7 @@ Pod::Spec.new do |s|
 Provides device, system, hardware, performance, and security information
 through a single MethodChannel-based Flutter plugin.
                        DESC
-  s.homepage         = 'https://github.com/bearcodestudio/device_inspector'
+  s.homepage         = 'https://github.com/ykarateke/device_inspector'
   s.license          = { :type => 'MIT', :file => '../LICENSE' }
   s.author           = { 'Bear Code Studio' => 'info@bearcode.dev' }
   s.source           = { :path => '.' }
