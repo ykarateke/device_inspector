@@ -1,318 +1,339 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/ykarateke/device_inspector/main/assets/logo-dark.svg">
-    <img alt="device_inspector" src="https://raw.githubusercontent.com/ykarateke/device_inspector/main/assets/logo.svg" width="220" />
-  </picture>
-</p>
-
 <h1 align="center">device_inspector</h1>
 
 <p align="center">
-  <strong>The missing device intelligence layer for Flutter</strong><br/>
-  <em>One API. Everything about the device. Zero external dependencies.</em>
+  <strong>Production-grade device intelligence SDK for Flutter</strong><br/>
+  <em>Comprehensive hardware, system, network, and security telemetry — through a single, consistent API.</em>
 </p>
 
 <p align="center">
-  <a href="https://pub.dev/packages/device_inspector"><img src="https://img.shields.io/pub/v/device_inspector?color=0175C2&label=pub.dev&style=for-the-badge" /></a>
-  <a href="https://github.com/ykarateke/device_inspector/actions"><img src="https://img.shields.io/github/actions/workflow/status/ykarateke/device_inspector/test.yml?branch=main&label=CI&style=for-the-badge" /></a>
-  <a href=""><img src="https://img.shields.io/badge/tests-96%20passed-success?style=for-the-badge&logo=dart" /></a>
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" /></a>
+  <a href="https://pub.dev/packages/device_inspector"><img src="https://img.shields.io/pub/v/device_inspector?color=0175C2&label=pub.dev&style=flat-square" /></a>
+  <a href="https://github.com/ykarateke/device_inspector/actions"><img src="https://img.shields.io/github/actions/workflow/status/ykarateke/device_inspector/test.yml?branch=main&label=CI&style=flat-square" /></a>
+  <a href=""><img src="https://img.shields.io/badge/tests-96%20passed-success?style=flat-square&logo=dart" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" /></a>
 </p>
 
 <p align="center">
-  <sub>
-    🍎 <b>iOS 14+</b> &nbsp;│&nbsp;
-    🤖 <b>Android 7.0+</b> &nbsp;│&nbsp;
-    🦅 <b>Swift 5.9</b> &nbsp;│&nbsp;
-    ☕ <b>Kotlin 1.9</b> &nbsp;│&nbsp;
-    🎯 <b>Dart 3.4+</b>
-  </sub>
+  iOS 14+ &nbsp;·&nbsp; Android 7.0+ &nbsp;·&nbsp; Swift 5.9 &nbsp;·&nbsp; Kotlin 1.9 &nbsp;·&nbsp; Dart 3.4+
 </p>
 
-<br/>
+---
+
+## Overview
+
+Modern Flutter applications depend on accurate device context for crash diagnostics, performance profiling, security auditing, and business intelligence. The Flutter ecosystem fragments this data across multiple packages — `device_info_plus`, `battery_plus`, `connectivity_plus`, `network_info_plus` — each with its own API surface, error handling, and maintenance lifecycle.
+
+**device_inspector** consolidates all device telemetry into a single, well-typed, extensively tested SDK. It replaces the fragmented package landscape with one `inspect()` call that returns a complete, immutable device snapshot.
+
+```dart
+final snapshot = await DeviceInspector.inspect();
+// DeviceSnapshot{
+//   device:     iPhone 15 Pro | tier: high
+//   os:         iOS 17.4
+//   battery:    85% charging
+//   network:    WiFi | VPN: false
+//   security:   score 100/100 | not compromised
+//   memory:     3.2 GB available of 8.0 GB
+//   storage:    120 GB free of 256 GB
+//   fingerprint: d4e5f6a7b8c9...
+// }
+```
 
 ---
 
-## 🤔 Why?
-
-<table>
-<tr>
-<td width="50%">
-
-### The Old Way 😤
-
-```dart
-// 5+ different packages, 5+ different APIs
-final device = await DeviceInfoPlugin().iosInfo;
-final battery = await Battery().batteryState;
-final network = await Connectivity().checkConnectivity();
-final pkg = await PackageInfo.fromPlatform();
-// 😵 root detection? manual...
-// 😵 device tier? DIY...
-// 😵 fingerprint? nope...
-```
-
-</td>
-<td width="50%">
-
-### With device_inspector 🚀
-
-```dart
-// One call. Everything.
-final snap = await DeviceInspector.inspect();
-
-snap.device.marketName;    // "iPhone 15 Pro"
-snap.os.version;            // "17.4"
-snap.battery.level;         // 85
-snap.network.isVpn;         // false
-snap.security.isCompromised;// false
-snap.hardware.tier;         // DeviceTier.high
-```
-
-</td>
-</tr>
-</table>
-
----
-
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 graph TB
-    subgraph APP["📱 Your Flutter App"]
+    subgraph APP["Application Layer"]
         DI["DeviceInspector.inspect()"]
-        BAT["DeviceInspector.batteryStream"]
-        NET["DeviceInspector.networkStream"]
-        FP["DeviceInspector.fingerprint"]
+        STREAM["Stream Subscriptions"]
     end
 
-    subgraph SDK["🧩 device_inspector SDK"]
-        API["🔌 Public API Layer"]
-        SRV["⚙️ Service Layer<br/>Device · OS · Battery · Network<br/>Hardware · Memory · Storage<br/>Security · App · Performance"]
-        CORE["🧠 Core Layer<br/>PlatformBridge · ErrorHandler<br/>Config · Logger · Constants"]
-        MODEL["📦 Model Layer<br/>11 Freezed Models · 6 Enums<br/>JSON Serializable · copyWith"]
+    subgraph SDK["device_inspector SDK"]
+        direction TB
+        API["Public API<br/>Singleton · Caching · Streams"]
+        SRV["Service Layer<br/>10 domain services"]
+        CORE["Core<br/>PlatformBridge · ErrorHandler · Config"]
+        MODEL["Models<br/>11 Freezed types · 6 enums"]
     end
 
-    subgraph BRIDGE["🌉 Platform Bridge"]
-        MC["MethodChannel"]
+    subgraph BRIDGE["Platform Bridge"]
+        MC["MethodChannel<br/>7 isolated channels"]
     end
 
-    subgraph NATIVE["📲 Native Providers"]
-        IOS["🍎 iOS<br/>Swift 5.9<br/>8 Providers<br/>UIDevice · sysctl · IOKit<br/>NWPathMonitor · Security"]
-        AND["🤖 Android<br/>Kotlin 1.9<br/>8 Providers<br/>Build · ConnectivityManager<br/>BatteryManager · /proc"]
+    subgraph NATIVE["Native Providers"]
+        IOS["iOS<br/>Swift 5.9 · UIDevice · IOKit · sysctl<br/>NWPathMonitor · Security checks"]
+        AND["Android<br/>Kotlin 1.9 · Build · ConnectivityManager<br/>BatteryManager · /proc · Security checks"]
     end
 
     APP --> SDK
-    API --> SRV --> CORE --> MODEL
+    API --> SRV --> CORE
+    CORE --> MODEL
     CORE --> BRIDGE
     BRIDGE --> IOS
     BRIDGE --> AND
 
-    style APP fill:#1a1a2e,stroke:#e94560,color:#fff
-    style SDK fill:#0f3460,stroke:#00d2ff,color:#fff
-    style BRIDGE fill:#16213e,stroke:#ffd700,color:#fff
-    style NATIVE fill:#533483,stroke:#e94560,color:#fff
+    style APP fill:#1b1b2f,stroke:#2d6a4f,color:#d8f3dc
+    style SDK fill:#0b525b,stroke:#56cfe1,color:#e0fbfc
+    style BRIDGE fill:#1b263b,stroke:#415a77,color:#e0e1dd
+    style NATIVE fill:#2d1b69,stroke:#7b2cbf,color:#e0aaff
 ```
 
 ---
 
-## ⚡ Feature Matrix
+## Capabilities
 
-|  | Module | Data | Stream | Phase |
-|---|---|---|---|---|
-| 🖥️ | **Device** | manufacturer · model · market name · tier · year | — | ✅ v0.1 |
-| 🍎 | **OS** | platform · version · API level · kernel · build | — | ✅ v0.1 |
-| 🔋 | **Battery** | level · charging · health · low-power | `batteryStream` | ✅ v0.1 |
-| 🌐 | **Network** | WiFi/Cell/VPN · carrier · 5G · proxy | `networkStream` | ✅ v0.1 |
-| 📦 | **App** | name · version · build · bundle ID · signature | — | ✅ v0.1 |
-| 🧠 | **Hardware** | CPU · GPU · display · refresh · HDR | — | 🔧 v0.2 |
-| 💾 | **Memory** | total · available · usage% · formatted | — | 🔧 v0.2 |
-| 💿 | **Storage** | total · free · usage% · data path | — | 🔧 v0.2 |
-| 🔐 | **Security** | root · jailbreak · emulator · debugger · score | — | ⏳ v0.3 |
-| 📊 | **Performance** | FPS · CPU% · memory · thermal | `PerformanceMonitor` | ⏳ v1.0 |
-| 🆔 | **Fingerprint** | SHA-256 device hash · anonymous · stable | — | ✅ v0.1 |
+### Device Identity
+
+```
+manufacturer    "Apple"             model           "iPhone16,2"
+marketName      "iPhone 15 Pro"     codename        "D84AP"
+tier            high                releaseYear     2023
+```
+
+### Operating System
+
+```
+platform        iOS                 version         17.4
+majorVersion    17                  minorVersion    4
+buildNumber     21E236              kernelVersion   Darwin 23.4.0
+apiLevel        null (iOS)          34 (Android)
+```
+
+### Battery & Power
+
+```
+level           85                  chargingState   discharging
+isCharging      false               health          good
+maxCapacity     95%                 lowPowerMode    false
+```
+
+### Network & Connectivity
+
+```
+type            wifi                carrier         Turkcell
+generation      5G                  vpn             false
+proxy           false               airplaneMode    false
+signalStrength  4
+```
+
+### Hardware Specifications
+
+**CPU** — A17 Pro · 6 cores (4P+2E) · arm64 · 3.78 GHz · Neural Engine
+
+**GPU** — Apple A17 GPU · Metal 3 · MTLGPUFamilyApple9
+
+**Display** — 1179 × 2556 px · 3.0× density · 120 Hz · HDR
+
+### Memory & Storage
+
+```
+Memory:   3.2 GB available / 8.0 GB total (60.0% used)
+Storage:  120 GB free / 256 GB total (53.1% used)
+```
+
+### Security Posture
+
+| Check | Result |
+|---|---|
+| Root / Jailbreak | Not detected |
+| Emulator | Not detected |
+| Debugger | Not attached |
+| Suspicious applications | None found |
+| Suspicious file paths | None found |
+| Dynamic library injection | Not detected |
+| **Security Score** | **100 / 100** |
 
 ---
 
-## 🚀 Quick Start
+## Real-Time Monitoring
 
-```yaml
-dependencies:
-  device_inspector: ^0.1.0
-```
+Battery and network state are available as broadcast streams. The SDK polls at configurable intervals and emits only when values change, minimizing overhead.
 
 ```dart
-import 'package:device_inspector/device_inspector.dart';
+await DeviceInspector.initialize(const DeviceInspectorConfig(
+  enableBatteryStream: true,
+  enableNetworkStream: true,
+  streamPollingIntervalMs: 3000, // poll every 3 seconds
+));
 
-void main() async {
-  // 1️⃣ Initialize with features you need
-  await DeviceInspector.initialize(const DeviceInspectorConfig(
-    enableSecurityCheck: true,
-    enableBatteryStream: true,
-    streamPollingIntervalMs: 3000,
+DeviceInspector.batteryStream?.listen((battery) {
+  if (battery.level < 20 && !battery.isCharging) {
+    showLowBatteryWarning();
+  }
+});
+
+DeviceInspector.networkStream?.listen((network) {
+  if (network.isVpn) authenticateSession();
+});
+```
+
+---
+
+## Device Fingerprint
+
+Produces a deterministic, anonymous SHA-256 hash from non-PII device characteristics — model, manufacturer, OS version, CPU architecture — combined with a locally stored random salt. The resulting 64-character hexadecimal string is:
+
+- **Stable** across application restarts on the same device
+- **Anonymous** — contains no IMEI, serial number, advertising ID, or personal data
+- **Isolated** — different applications generate different fingerprints due to the per-app salt
+
+```dart
+final fingerprint = await DeviceInspector.fingerprint;
+// d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4
+```
+
+---
+
+## Enterprise Integration
+
+### Crash Reporting
+
+```dart
+// Sentry
+final snapshot = await DeviceInspector.inspect();
+Sentry.configureScope((scope) {
+  scope.setContexts('device', snapshot.toJson());
+  scope.setTag('device_tier', snapshot.device.tier.name);
+  scope.setTag('security_score', '${snapshot.security.securityScore}');
+});
+
+// Firebase Crashlytics
+await FirebaseCrashlytics.instance.setCustomKeys({
+  'device_model': snapshot.device.model,
+  'os_version': snapshot.os.version,
+  'device_tier': snapshot.device.tier.name,
+  'battery_level': snapshot.battery.level,
+  'network_type': snapshot.network.type.name,
+});
+```
+
+### Security Auditing
+
+```dart
+final security = await DeviceInspector.security;
+
+if (security.isCompromised) {
+  await api.reportSecurityEvent(SecurityEvent(
+    threats: security.detectedThreats,
+    score: security.securityScore,
+    deviceFingerprint: await DeviceInspector.fingerprint,
   ));
 
-  // 2️⃣ Grab everything at once
-  final s = await DeviceInspector.inspect();
-  print('📱 ${s.device.marketName} — ${s.os.platform} ${s.os.version}');
-  print('🔋 ${s.battery.level}% | 🌐 ${s.network.type.name} | 🛡️ ${s.security.securityScore}/100');
+  if (security.isRooted || security.isJailbroken) {
+    restrictSensitiveOperations();
+  }
+}
+```
 
-  // 3️⃣ Or cherry-pick what you need
-  final battery = await DeviceInspector.battery;   // cached lazy-load
-  if (battery.level < 15) showLowBatteryWarning();
+### Device Tier Targeting
 
-  // 4️⃣ Subscribe to real-time changes
-  DeviceInspector.batteryStream?.listen((b) {
-    print('🔋 battery changed: ${b.level}%');
-  });
+```dart
+final tier = (await DeviceInspector.hardware).tier;
 
-  // 5️⃣ Identify devices anonymously
-  final fp = await DeviceInspector.fingerprint;
-  Sentry.configureScope((s) => s.setTag('device_hash', fp));
+switch (tier) {
+  case DeviceTier.low:
+    applyMinimalGraphics();
+    reduceAssetResolution();
+  case DeviceTier.medium:
+    applyStandardGraphics();
+  case DeviceTier.high:
+    applyUltraGraphics();
+    enableRayTracing();
 }
 ```
 
 ---
 
-## 🎯 Use Cases
+## Privacy & Compliance
 
-<table>
-<tr>
-<td align="center" width="33%">
+device_inspector is designed for environments where data privacy is non-negotiable. The SDK operates entirely on-device with no network transmission capability.
 
-### 🐛 Crash Reporting
-```dart
-// Sentry context
-scope.setContexts('device', 
-  snapshot.toJson());
-scope.setTag('tier', 
-  snapshot.device.tier.name);
-```
-> *"Why did this crash only on Galaxy A12?"*
-> → Now you know the device, OS, battery, and memory state at crash time.
+**Collected (local-only, no transmission):**
+- Device model, manufacturer, OS version
+- CPU architecture, core count
+- Battery level, charging state
+- Network connection type
+- Application version metadata
 
-</td>
-<td align="center" width="33%">
+**Never collected:**
+- IMEI, serial number, MAC address
+- Phone number, contact lists
+- GPS location
+- Advertising identifiers (IDFA, AAID)
+- Installed application lists
+- Microphone, camera, or sensor data
 
-### 📊 Analytics
-```dart
-analytics.setUserProperty(
-  'device_tier', tier.name);
-analytics.setUserProperty(
-  'network', network.type.name);
-```
-> *"80% of our users are on low-tier devices"*
-> → Adjust graphic quality, reduce payload size, optimize.
-
-</td>
-<td align="center" width="33%">
-
-### 🔐 Fraud Detection
-```dart
-if (security.isCompromised) {
-  await api.flagForReview(
-    snapshot.toJson());
-}
-```
-> *"This device is rooted AND on an emulator"*
-> → Flag for manual review, block sensitive operations.
-
-</td>
-</tr>
-</table>
+**Compliance considerations:**
+- GDPR: No personal data collected; falls under legitimate interest for diagnostics
+- Apple App Store: Uses only public APIs (`UIDevice`, `sysctl`, `IOKit`)
+- Google Play Store: No special permissions required beyond `ACCESS_NETWORK_STATE`
+- No data leaves the device unless the integrating application explicitly serializes and transmits `toJson()` output, which is the developer's responsibility to declare in their privacy policy
 
 ---
 
-## 🔐 Security Shield
+## Platform Support
+
+| Platform | Minimum Version | Status |
+|---|---|---|
+| iOS | 14.0 | Production |
+| Android | 7.0 (API 24) | Production |
+| Web | — | Not supported |
+| macOS | — | Not supported |
+| Windows | — | Not supported |
+| Linux | — | Not supported |
+
+---
+
+## Data Model
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    SECURITY SCORE: 85/100                │
-├─────────────────────────────────────────────────────────┤
-│  ✅ Root binary check    ──  /sbin/su NOT found          │
-│  ✅ Magisk detection     ──  /data/adb/magisk NOT found  │
-│  ✅ Emulator check       ──  Build.FINGERPRINT != generic│
-│  ⚠️ Developer mode       ──  ADB debugging enabled       │
-│  ✅ Debugger             ──  No debugger attached        │
-│  ✅ Cydia / SuperSU      ──  No suspicious apps          │
-│  ✅ Sandbox integrity    ──  Write test passed           │
-│  ✅ dylib injection      ──  No hooks detected           │
-└─────────────────────────────────────────────────────────┘
+DeviceSnapshot
+├── device        DeviceInfo         manufacturer, model, marketName, tier
+├── os            OSInfo             platform, version, major/minor/patch
+├── battery       BatteryInfo        level, chargingState, health, lowPowerMode
+├── network       NetworkInfo        type, carrier, isVpn, isProxy, signalStrength
+├── hardware      HardwareInfo
+│   ├── cpu       CPUInfo            name, cores, architecture, frequency, neuralEngine
+│   ├── gpu       GPUInfo            name, metalSupport, vulkanSupport, openGLES
+│   └── display   DisplayInfo        resolution, density, refreshRate, hdr, brightness
+├── memory        MemoryInfo         totalBytes, availableBytes, usagePercent
+├── storage       StorageInfo        totalBytes, freeBytes, usagePercent
+├── security      SecurityInfo       isCompromised, detectedThreats, securityScore
+├── app           AppInfo            appName, version, buildNumber, bundleId
+└── timestampMsSinceEpoch
 ```
 
 ---
 
-## 📊 Data Model
+## Roadmap
 
-```
-DeviceSnapshot  ◄── DeviceInspector.inspect()
-│
-├─ 🖥️ DeviceInfo         manufacturer, model, marketName, identifier, tier, year
-├─ 🍎 OSInfo             platform, version, major/minor/patch, build, apiLevel
-├─ 🔋 BatteryInfo        level, chargingState, isCharging, health, lowPower
-├─ 🌐 NetworkInfo        type, carrier, cellularGen, isVpn, isProxy, airplane
-├─ 🧠 HardwareInfo
-│  ├─ CPUInfo            name, cores, architecture, frequency, neuralEngine
-│  ├─ GPUInfo            name, supportsMetal, supportsVulkan, openGLES
-│  └─ DisplayInfo        width, height, density, refreshRate, HDR, brightness
-├─ 💾 MemoryInfo         totalBytes, availableBytes, usage%, formatted
-├─ 💿 StorageInfo        totalBytes, freeBytes, usage%, dataPath, cachePath
-├─ 🔐 SecurityInfo       isRooted, isJailbroken, isEmulator, score (0-100)
-├─ 🆔 AppInfo            appName, version, buildNumber, bundleId, signature
-└─ ⏱️ timestampMsSinceEpoch
-```
+| Version | Quarter | Scope |
+|---|---|---|
+| **0.1.0** | Q1 2025 | Device, OS, Battery, Network, App identity; Stream listeners; Fingerprint |
+| **0.2.0** | Q2 2025 | Hardware intelligence: CPU, GPU, Display, Memory, Storage; Device tier classification |
+| **0.3.0** | Q3 2025 | Security module: Root, Jailbreak, Emulator, Debugger detection; Threat scoring |
+| **1.0.0** | Q4 2025 | Performance monitoring: FPS, CPU %, Memory, Thermal state; Stream-based telemetry |
+| **2.0.0** | TBD | Cloud dashboard; Device fleet analytics; Crash correlation engine |
 
 ---
 
-## 🗺️ Roadmap
+## Documentation
 
-```
-v0.1.0 MVP ✅          v0.2.0 Hardware 🔧       v0.3.0 Security ⏳      v1.0.0 Perf ⏳
-╔═══════════╗          ╔══════════════╗         ╔══════════════╗        ╔══════════╗
-║ Device    ║          ║ CPU · GPU    ║         ║ Root detect  ║        ║ FPS      ║
-║ OS        ║   ───►   ║ Display      ║  ───►   ║ Jailbreak    ║ ───►   ║ CPU %    ║
-║ Battery   ║          ║ Memory       ║         ║ Emulator     ║        ║ Memory   ║
-║ Network   ║          ║ Storage      ║         ║ Debugger     ║        ║ Thermal  ║
-║ App       ║          ║ Device Tier  ║         ║ Threat Score ║        ║ Stream   ║
-║ Streams   ║          ╚══════════════╝         ╚══════════════╝        ╚══════════╝
-║ Fingerp.  ║
-╚═══════════╝
-     Q1 2025               Q2 2025                 Q3 2025               Q4 2025
-```
-
----
-
-## 🔒 Privacy
-
-> **device_inspector does NOT collect, store, or transmit any data.**
-
-| ❌ Never collected | ✅ What we do |
+| Document | Contents |
 |---|---|
-| IMEI · Serial · MAC | Device model & OS version |
-| Phone number · Contacts | Battery level & charging state |
-| GPS · Location | Network type (WiFi/Cellular) |
-| Microphone · Camera | CPU architecture & cores |
-| Advertising ID (IDFA/AAID) | Anonymous device fingerprint |
-| Installed apps · Keystrokes | Security state (root/emulator) |
+| [API Reference](docs/API_SPEC.md) | Classes, methods, parameters, enums, error codes |
+| [Architecture](docs/ARCHITECTURE.md) | Layered design, data flow, design decisions, performance |
+| [Data Models](docs/DATA_MODELS.md) | 11 Freezed types, JSON serialization, model relationship tree |
+| [Platform Integration](docs/PLATFORM_INTEGRATION.md) | iOS Swift + Android Kotlin native provider implementations |
+| [Security & Privacy](docs/SECURITY_PRIVACY.md) | Detection algorithms, OWASP MASVS mapping, compliance |
+| [Testing](docs/TESTING.md) | Test strategy, unit/service/integration suite, CI pipeline |
+| [Development](docs/DEVELOPMENT.md) | Environment setup, conventions, module authoring, debugging |
+| [Changelog](CHANGELOG.md) | Release history, migration notes, breaking changes |
 
 ---
 
-## 📚 Documentation
-
-| Document | |
-|---|---|
-| 📘 [**API Reference**](docs/API_SPEC.md) | Classes, methods, parameters, enums, error codes |
-| 🏗️ [**Architecture**](docs/ARCHITECTURE.md) | Layered design, data flow, design decisions |
-| 📦 [**Data Models**](docs/DATA_MODELS.md) | 11 Freezed models, JSON config, model tree |
-| 🔌 [**Platform Integration**](docs/PLATFORM_INTEGRATION.md) | iOS Swift + Android Kotlin native code |
-| 🔐 [**Security & Privacy**](docs/SECURITY_PRIVACY.md) | Detection algorithms, OWASP MASVS, compliance |
-| 🧪 [**Testing**](docs/TESTING.md) | Unit, service, core, integration — 96 tests |
-| 🛠️ [**Development**](docs/DEVELOPMENT.md) | Setup, conventions, adding modules, contributing |
-| 📋 [**Changelog**](CHANGELOG.md) | Release history and roadmap |
-
----
-
-## 🤝 Contributing
+## Development
 
 ```bash
 git clone https://github.com/ykarateke/device_inspector.git
@@ -320,19 +341,10 @@ cd device_inspector
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs
 
-flutter test         # ✅ 96 tests
-dart analyze         # ✅ 0 errors
+flutter test         # 96 tests, all passing
+dart analyze         # 0 errors, 0 warnings
 ```
 
-PRs welcome! Check [CONTRIBUTING.md](CONTRIBUTING.md) and [DEVELOPMENT.md](docs/DEVELOPMENT.md).
+## License
 
----
-
-<p align="center">
-  <sub>
-    MIT © <a href="https://github.com/ykarateke">ykarateke</a>
-    &nbsp;·&nbsp;
-    Built for developers who need to <em>understand</em> their users' devices,
-    not just count installs.
-  </sub>
-</p>
+MIT © [ykarateke](https://github.com/ykarateke)
