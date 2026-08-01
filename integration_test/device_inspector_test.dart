@@ -8,8 +8,10 @@ void main() {
   group('DeviceInspector Integration Tests', () {
     setUp(() async {
       await DeviceInspector.initialize(
-        enableSecurityCheck: true,
-        logLevel: DeviceInspectorLogLevel.error,
+        const DeviceInspectorConfig(
+          enableSecurityCheck: true,
+          logLevel: DeviceInspectorLogLevel.error,
+        ),
       );
     });
 
