@@ -23,6 +23,7 @@ import 'models/storage_info.dart';
 import 'services/app_service.dart';
 import 'services/battery_service.dart';
 import 'services/device_service.dart';
+import 'services/fingerprint_service.dart';
 import 'services/hardware_service.dart';
 import 'services/memory_service.dart';
 import 'services/network_service.dart';
@@ -68,7 +69,14 @@ class DeviceInspector {
   StorageService? _storageService;
   SecurityService? _securityService;
   AppService? _appService;
+  FingerprintService? _fingerprintService;
   PerformanceMonitor? _performanceMonitor;
+
+  // Stream controllers for real-time listeners
+  StreamController<BatteryInfo>? _batteryController;
+  StreamController<NetworkInfo>? _networkController;
+  Timer? _batteryTimer;
+  Timer? _networkTimer;
 
   // Caches
   final Map<DeviceInspectorModule, Future<Object?>> _cache = {};
@@ -106,12 +114,21 @@ class DeviceInspector {
     _instance._storageService = StorageService(bridge: bridge);
     _instance._securityService = SecurityService(bridge: bridge);
     _instance._appService = AppService();
+    _instance._fingerprintService = FingerprintService(bridge: bridge);
 
     if (cfg.enablePerformanceMonitor) {
       _instance._performanceMonitor = PerformanceMonitor(
         bridge: bridge,
         samplingIntervalMs: cfg.performanceSamplingIntervalMs,
       );
+    }
+
+    // Start stream listeners if enabled
+    if (cfg.enableBatteryStream) {
+      _instance._startBatteryStream(cfg.streamPollingIntervalMs);
+    }
+    if (cfg.enableNetworkStream) {
+      _instance._startNetworkStream(cfg.streamPollingIntervalMs);
     }
   }
 
@@ -130,6 +147,7 @@ class DeviceInspector {
         _storageService = StorageService(bridge: bridge);
         _securityService = SecurityService(bridge: bridge);
         _appService = AppService();
+        _fingerprintService = FingerprintService(bridge: bridge);
       } catch (e) {
         throw ConfigurationException('Failed to auto-initialize: $e');
       }
@@ -236,6 +254,94 @@ class DeviceInspector {
   static PerformanceMonitor? get performance =>
       _instance._performanceMonitor;
 
+  /// Broadcast stream of battery state changes.
+  ///
+  /// Emits [BatteryInfo] every [DeviceInspectorConfig.streamPollingIntervalMs]
+  /// when the level or charging state changes.
+  /// Requires `enableBatteryStream: true` in [DeviceInspectorConfig].
+  ///
+  /// Returns `null` if the stream was not enabled at initialization.
+  static Stream<BatteryInfo>? get batteryStream =>
+      _instance._batteryController?.stream;
+
+  /// Broadcast stream of network state changes.
+  ///
+  /// Emits [NetworkInfo] every [DeviceInspectorConfig.streamPollingIntervalMs]
+  /// when the connection type or properties change.
+  /// Requires `enableNetworkStream: true` in [DeviceInspectorConfig].
+  ///
+  /// Returns `null` if the stream was not enabled at initialization.
+  static Stream<NetworkInfo>? get networkStream =>
+      _instance._networkController?.stream;
+
+  /// Anonymous, stable device fingerprint.
+  ///
+  /// A 64-character hex hash derived from device characteristics
+  /// (model, manufacturer, OS, architecture) combined with a local
+  /// random salt. Contains **no PII** — no IMEI, serial, or advertising ID.
+  ///
+  /// Stable across app restarts on the same device.
+  /// Different devices produce different fingerprints.
+  ///
+  /// ```dart
+  /// final fp = await DeviceInspector.fingerprint;
+  /// // "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4"
+  /// ```
+  static Future<String> get fingerprint =>
+      _instance._fingerprintService!.getFingerprint();
+
+  // ── Stream Internals ─────────────────────────────────────────────────
+
+  BatteryInfo? _lastBattery;
+
+  void _startBatteryStream(int intervalMs) {
+    _batteryController = StreamController<BatteryInfo>.broadcast();
+    _batteryTimer = Timer.periodic(
+      Duration(milliseconds: intervalMs),
+      (_) => _pollBattery(),
+    );
+    _pollBattery(); // immediate first poll
+  }
+
+  Future<void> _pollBattery() async {
+    try {
+      final info = await _batteryService!.fetch();
+      if (_lastBattery == null ||
+          _lastBattery!.level != info.level ||
+          _lastBattery!.chargingState != info.chargingState) {
+        _lastBattery = info;
+        _batteryController?.add(info);
+      }
+    } catch (_) {
+      // silently skip failed polls
+    }
+  }
+
+  NetworkInfo? _lastNetwork;
+
+  void _startNetworkStream(int intervalMs) {
+    _networkController = StreamController<NetworkInfo>.broadcast();
+    _networkTimer = Timer.periodic(
+      Duration(milliseconds: intervalMs),
+      (_) => _pollNetwork(),
+    );
+    _pollNetwork(); // immediate first poll
+  }
+
+  Future<void> _pollNetwork() async {
+    try {
+      final info = await _networkService!.fetch();
+      if (_lastNetwork == null ||
+          _lastNetwork!.type != info.type ||
+          _lastNetwork!.isVpn != info.isVpn) {
+        _lastNetwork = info;
+        _networkController?.add(info);
+      }
+    } catch (_) {
+      // silently skip failed polls
+    }
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────
 
   Future<T> _cached<T>(
@@ -267,9 +373,21 @@ class DeviceInspector {
     }
   }
 
-  /// Releases all SDK resources: stops performance monitor, clears caches,
-  /// and disposes the platform bridge.
+  /// Releases all SDK resources: stops streams, performance monitor,
+  /// clears caches, and disposes the platform bridge.
   static void dispose() {
+    // Stop streams
+    _instance._batteryTimer?.cancel();
+    _instance._batteryTimer = null;
+    _instance._networkTimer?.cancel();
+    _instance._networkTimer = null;
+    _instance._batteryController?.close();
+    _instance._batteryController = null;
+    _instance._networkController?.close();
+    _instance._networkController = null;
+    _instance._lastBattery = null;
+    _instance._lastNetwork = null;
+
     _instance._performanceMonitor?.dispose();
     _instance._cache.clear();
     _instance._core?.dispose();
@@ -283,6 +401,7 @@ class DeviceInspector {
     _instance._storageService = null;
     _instance._securityService = null;
     _instance._appService = null;
+    _instance._fingerprintService = null;
     _instance._performanceMonitor = null;
   }
 
