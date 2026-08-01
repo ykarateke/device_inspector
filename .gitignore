@@ -1,8 +1,39 @@
-/docs/
-.wrongstack/
-!/.wrongstack/
-/.wrongstack/*
-!/.wrongstack/project.json
+# Dependencies
+.dart_tool/
+.packages
+build/
+pubspec.lock
 
-/.wrongstack/
+# Generated files
+**/*.freezed.dart
+**/*.g.dart
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flutter
+.metadata
+*.snap
+*.dill
+*.pyc
+
+# Testing
+coverage/
+
+# Example app generated
+example/.dart_tool/
+example/build/
+example/pubspec.lock
+example/ios/Pods/
+example/ios/.symlinks/
+example/android/.gradle/
+
+# WrongStack
+.wrongstack/
 

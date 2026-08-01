@@ -1,0 +1,37 @@
+name: device_inspector
+description: >-
+  Flutter device analysis SDK. Provides device, system, hardware,
+  performance, and security information through a single standard API.
+version: 0.1.0
+homepage: https://github.com/bearcodestudio/device_inspector
+repository: https://github.com/bearcodestudio/device_inspector
+issue_tracker: https://github.com/bearcodestudio/device_inspector/issues
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  freezed_annotation: ^2.4.0
+  json_annotation: ^4.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  freezed: ^2.5.0
+  json_serializable: ^6.8.0
+  build_runner: ^2.4.0
+  integration_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      ios:
+        pluginClass: DeviceInspectorPlugin
+      android:
+        package: com.bearcode.device_inspector
+        pluginClass: DeviceInspectorPlugin
