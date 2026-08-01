@@ -77,3 +77,24 @@ enum NetworkType {
   offline,
   unknown,
 }
+
+/// Security risk classification derived from threat indicators.
+///
+/// Unlike the binary [SecurityInfo.isCompromised], risk levels allow
+/// proportional response — a debugger is less severe than full root access.
+enum SecurityRiskLevel {
+  /// No threats detected — device is clean.
+  low,
+
+  /// Minor concerns (developer mode, USB debugging).
+  medium,
+
+  /// Significant threats (emulator, debugger attached).
+  high,
+
+  /// Critical compromise (root, jailbreak, injection).
+  critical,
+
+  /// Unable to assess — security checks not run.
+  unknown,
+}
