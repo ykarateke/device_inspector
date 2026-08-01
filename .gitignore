@@ -1,1 +1,8 @@
 /docs/
+.wrongstack/
+!/.wrongstack/
+/.wrongstack/*
+!/.wrongstack/project.json
+
+/.wrongstack/
+
