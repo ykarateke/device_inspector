@@ -29,17 +29,14 @@ enum DeviceInspectorLogLevel {
 /// In production, log level should be [DeviceInspectorLogLevel.off]
 /// or [DeviceInspectorLogLevel.error] to avoid leaking device data.
 class Logger {
-  DeviceInspectorLogLevel _level;
-
-  Logger(this._level);
-
   /// Current log level. Setting to [DeviceInspectorLogLevel.off] suppresses all output.
-  set level(DeviceInspectorLogLevel value) => _level = value;
-  DeviceInspectorLogLevel get level => _level;
+  DeviceInspectorLogLevel level;
+
+  Logger(this.level);
 
   /// Log an error message.
   void error(String message, [Object? error, StackTrace? stack]) {
-    if (_level.index >= DeviceInspectorLogLevel.error.index) {
+    if (level.index >= DeviceInspectorLogLevel.error.index) {
       // ignore: avoid_print
       print('[device_inspector][ERROR] $message ${error ?? ''}');
     }
@@ -47,7 +44,7 @@ class Logger {
 
   /// Log a warning message.
   void warn(String message) {
-    if (_level.index >= DeviceInspectorLogLevel.warn.index) {
+    if (level.index >= DeviceInspectorLogLevel.warn.index) {
       // ignore: avoid_print
       print('[device_inspector][WARN] $message');
     }
@@ -55,7 +52,7 @@ class Logger {
 
   /// Log an informational message.
   void info(String message) {
-    if (_level.index >= DeviceInspectorLogLevel.info.index) {
+    if (level.index >= DeviceInspectorLogLevel.info.index) {
       // ignore: avoid_print
       print('[device_inspector][INFO] $message');
     }
@@ -63,7 +60,7 @@ class Logger {
 
   /// Log a debug message. Includes detailed platform call information.
   void debug(String message) {
-    if (_level.index >= DeviceInspectorLogLevel.debug.index) {
+    if (level.index >= DeviceInspectorLogLevel.debug.index) {
       // ignore: avoid_print
       print('[device_inspector][DEBUG] $message');
     }
@@ -71,7 +68,7 @@ class Logger {
 
   /// Log a verbose trace message (internal details).
   void verbose(String message) {
-    if (_level.index >= DeviceInspectorLogLevel.verbose.index) {
+    if (level.index >= DeviceInspectorLogLevel.verbose.index) {
       // ignore: avoid_print
       print('[device_inspector][VERBOSE] $message');
     }

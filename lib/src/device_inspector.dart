@@ -9,8 +9,17 @@ import 'dart:async';
 import 'core/configuration.dart';
 import 'core/device_inspector_core.dart';
 import 'core/error_handler.dart';
+import 'models/app_info.dart';
+import 'models/battery_info.dart';
+import 'models/device_info.dart';
 import 'models/device_snapshot.dart';
 import 'models/enums.dart';
+import 'models/hardware_info.dart';
+import 'models/memory_info.dart';
+import 'models/network_info.dart';
+import 'models/os_info.dart';
+import 'models/security_info.dart';
+import 'models/storage_info.dart';
 import 'services/app_service.dart';
 import 'services/battery_service.dart';
 import 'services/device_service.dart';
@@ -22,8 +31,22 @@ import 'services/performance_service.dart';
 import 'services/security_service.dart';
 import 'services/storage_service.dart';
 
+// Re-export all public types for convenience
+export 'core/configuration.dart';
+export 'core/error_handler.dart';
+export 'core/logger.dart';
+export 'models/app_info.dart';
+export 'models/battery_info.dart';
+export 'models/device_info.dart';
 export 'models/device_snapshot.dart';
 export 'models/enums.dart';
+export 'models/hardware_info.dart';
+export 'models/memory_info.dart';
+export 'models/network_info.dart';
+export 'models/os_info.dart';
+export 'models/performance_snapshot.dart';
+export 'models/security_info.dart';
+export 'models/storage_info.dart';
 
 /// Main entry point for the device_inspector SDK.
 ///
@@ -88,14 +111,6 @@ class DeviceInspector {
       _instance._performanceMonitor = PerformanceMonitor(
         bridge: bridge,
         samplingIntervalMs: cfg.performanceSamplingIntervalMs,
-      );
-    }
-  }
-
-  void _ensureInitialized() {
-    if (_core == null) {
-      throw ConfigurationException(
-        'DeviceInspector.initialize() must be called first',
       );
     }
   }
@@ -299,18 +314,3 @@ class DeviceInspector {
     }
   }
 }
-
-// Re-export all public types for convenience
-export 'core/configuration.dart';
-export 'core/error_handler.dart';
-export 'core/logger.dart';
-export 'models/app_info.dart';
-export 'models/battery_info.dart';
-export 'models/device_info.dart';
-export 'models/hardware_info.dart';
-export 'models/memory_info.dart';
-export 'models/network_info.dart';
-export 'models/os_info.dart';
-export 'models/performance_snapshot.dart';
-export 'models/security_info.dart';
-export 'models/storage_info.dart';

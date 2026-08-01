@@ -4,7 +4,7 @@ import 'package:device_inspector/src/models/security_info.dart';
 void main() {
   group('SecurityInfo', () {
     test('isCompromised: false when all indicators are clean', () {
-      const info = SecurityInfo.unknown();
+      final info = SecurityInfo.unknown();
       expect(info.isCompromised, false);
     });
 
@@ -29,12 +29,12 @@ void main() {
     });
 
     test('detectedThreats is initialized as empty list', () {
-      const info = SecurityInfo.unknown();
+      final info = SecurityInfo.unknown();
       expect(info.detectedThreats, isEmpty);
     });
 
     test('securityScore defaults to 100', () {
-      const info = SecurityInfo.unknown();
+      final info = SecurityInfo.unknown();
       expect(info.securityScore, 100);
     });
   });

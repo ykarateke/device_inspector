@@ -44,6 +44,7 @@ abstract final class Methods {
   static const String getSecurityInfo = 'getSecurityInfo';
 
   // Performance monitor methods
+  static const String getPerformanceSnapshot = 'getPerformanceSnapshot';
   static const String startPerformanceMonitor = 'startPerformanceMonitor';
   static const String stopPerformanceMonitor = 'stopPerformanceMonitor';
 }

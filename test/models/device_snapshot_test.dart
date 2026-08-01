@@ -9,8 +9,6 @@ import 'package:device_inspector/src/models/memory_info.dart';
 import 'package:device_inspector/src/models/storage_info.dart';
 import 'package:device_inspector/src/models/security_info.dart';
 import 'package:device_inspector/src/models/app_info.dart';
-import 'package:device_inspector/src/models/enums.dart';
-
 void main() {
   group('DeviceSnapshot', () {
     test('fromJson constructs all sub-models correctly', () {
