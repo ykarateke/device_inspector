@@ -157,36 +157,86 @@ class DeviceInspector {
 
   // ── Full Inspection ────────────────────────────────────────────────────
 
-  /// Collects **all** device information in a single parallel call.
+  /// Collects device information in a single parallel call.
   ///
-  /// Returns a [DeviceSnapshot] containing every sub-module.
-  /// This is the recommended API for crash reporting and analytics.
-  static Future<DeviceSnapshot> inspect() async {
+  /// When [modules] is `null` (default), returns a [DeviceSnapshot] containing
+  /// every sub-module. Pass a subset of [DeviceInspectorModule] values to
+  /// collect only the data you need — reducing overhead for performance-
+  /// sensitive paths.
+  ///
+  /// ```dart
+  /// // Full inspection — all modules
+  /// final full = await DeviceInspector.inspect();
+  ///
+  /// // Targeted inspection — only what you need
+  /// final partial = await DeviceInspector.inspect(
+  ///   modules: [DeviceInspectorModule.security, DeviceInspectorModule.device],
+  /// );
+  /// ```
+  static Future<DeviceSnapshot> inspect({
+    List<DeviceInspectorModule>? modules,
+  }) async {
     final inst = _instance;
     inst._getCore();
 
-    final results = await Future.wait([
-      inst._deviceService!.fetch(),
-      inst._osService!.fetch(),
-      inst._batteryService!.fetch(),
-      inst._networkService!.fetch(),
-      inst._hardwareService!.fetch(),
-      inst._memoryService!.fetch(),
-      inst._storageService!.fetch(),
-      inst._securityService!.fetch(),
-      inst._appService!.fetch(),
-    ]);
+    final requested = modules ?? DeviceInspectorModule.values;
+    final futures = <Future<Object?>>[];
+    final indexMap = <int, DeviceInspectorModule>{};
+
+    for (final module in requested) {
+      indexMap[futures.length] = module;
+      switch (module) {
+        case DeviceInspectorModule.device:
+          futures.add(inst._deviceService!.fetch());
+        case DeviceInspectorModule.os:
+          futures.add(inst._osService!.fetch());
+        case DeviceInspectorModule.battery:
+          futures.add(inst._batteryService!.fetch());
+        case DeviceInspectorModule.network:
+          futures.add(inst._networkService!.fetch());
+        case DeviceInspectorModule.hardware:
+          futures.add(inst._hardwareService!.fetch());
+        case DeviceInspectorModule.memory:
+          futures.add(inst._memoryService!.fetch());
+        case DeviceInspectorModule.storage:
+          futures.add(inst._storageService!.fetch());
+        case DeviceInspectorModule.security:
+          futures.add(inst._securityService!.fetch());
+        case DeviceInspectorModule.app:
+          futures.add(inst._appService!.fetch());
+        case DeviceInspectorModule.performance:
+          // Performance is stream-based, not snapshot-based
+          break;
+      }
+    }
+
+    final results = await Future.wait(futures);
+
+    // Helper to find result by module
+    T? _find<T>(DeviceInspectorModule module) {
+      for (var i = 0; i < indexMap.length; i++) {
+        if (indexMap[i] == module) return results[i] as T?;
+      }
+      return null;
+    }
 
     return DeviceSnapshot(
-      device: results[0] as DeviceInfo,
-      os: results[1] as OSInfo,
-      battery: results[2] as BatteryInfo,
-      network: results[3] as NetworkInfo,
-      hardware: results[4] as HardwareInfo,
-      memory: results[5] as MemoryInfo,
-      storage: results[6] as StorageInfo,
-      security: results[7] as SecurityInfo,
-      app: results[8] as AppInfo,
+      device: _find<DeviceInfo>(DeviceInspectorModule.device) ??
+          DeviceInfo.unknown(),
+      os: _find<OSInfo>(DeviceInspectorModule.os) ?? OSInfo.unknown(),
+      battery: _find<BatteryInfo>(DeviceInspectorModule.battery) ??
+          BatteryInfo.unknown(),
+      network: _find<NetworkInfo>(DeviceInspectorModule.network) ??
+          NetworkInfo.unknown(),
+      hardware: _find<HardwareInfo>(DeviceInspectorModule.hardware) ??
+          HardwareInfo.unknown(),
+      memory: _find<MemoryInfo>(DeviceInspectorModule.memory) ??
+          MemoryInfo.unknown(),
+      storage: _find<StorageInfo>(DeviceInspectorModule.storage) ??
+          StorageInfo.unknown(),
+      security: _find<SecurityInfo>(DeviceInspectorModule.security) ??
+          SecurityInfo.unknown(),
+      app: _find<AppInfo>(DeviceInspectorModule.app) ?? AppInfo.unknown(),
       timestampMsSinceEpoch: DateTime.now().millisecondsSinceEpoch,
     );
   }
