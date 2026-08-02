@@ -36,4 +36,4 @@ example/android/.gradle/
 
 # WrongStack
 .wrongstack/
-
+*CLAUDE.md
