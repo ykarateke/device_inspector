@@ -118,7 +118,7 @@ class SecurityCheckProvider(private val context: Context) : MethodChannel.Method
                 info["hasModifiedLibraries"] = false
             }
 
-            result(info)
+            result.success(info)
         }
     }
 

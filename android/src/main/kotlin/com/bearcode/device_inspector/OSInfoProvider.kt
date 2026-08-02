@@ -27,7 +27,7 @@ class OSInfoProvider(private val context: Context) : MethodChannel.MethodCallHan
             info["apiLevel"] = Build.VERSION.SDK_INT
             info["kernelVersion"] = System.getProperty("os.version")
 
-            result(info)
+            result.success(info)
         } catch (e: Exception) {
             result.error("OS_INFO_ERROR", e.message, null)
         }

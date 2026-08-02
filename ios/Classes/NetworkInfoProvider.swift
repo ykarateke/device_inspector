@@ -1,3 +1,4 @@
+import Flutter
 import Foundation
 import Network
 import CoreTelephony
@@ -49,16 +50,23 @@ class NetworkInfoProvider {
         result(info)
     }
 
+    // Raw string values per Apple's CoreTelephony docs — used instead of the
+    // symbolic constants so this compiles regardless of deployment target
+    // (CTRadioAccessTechnologyNR requires iOS 14.1+ to reference as a symbol).
     static func parseRadioTechnology(_ tech: String) -> String {
         switch tech {
-        case CTRadioAccessTechnologyLTE: return "4G"
-        case CTRadioAccessTechnologyNR: return "5G"
-        case CTRadioAccessTechnologyWCDMAHSDPA,
-             CTRadioAccessTechnologyWCDMAHSUPA,
-             CTRadioAccessTechnologyHSDPA,
-             CTRadioAccessTechnologyHSUPA: return "3G"
-        case CTRadioAccessTechnologyEdge,
-             CTRadioAccessTechnologyGPRS: return "2G"
+        case "CTRadioAccessTechnologyLTE": return "4G"
+        case "CTRadioAccessTechnologyNR", "CTRadioAccessTechnologyNRNSA": return "5G"
+        case "CTRadioAccessTechnologyWCDMA",
+             "CTRadioAccessTechnologyHSDPA",
+             "CTRadioAccessTechnologyHSUPA",
+             "CTRadioAccessTechnologyCDMA1x",
+             "CTRadioAccessTechnologyCDMAEVDORev0",
+             "CTRadioAccessTechnologyCDMAEVDORevA",
+             "CTRadioAccessTechnologyCDMAEVDORevB",
+             "CTRadioAccessTechnologyeHRPD": return "3G"
+        case "CTRadioAccessTechnologyEdge",
+             "CTRadioAccessTechnologyGPRS": return "2G"
         default: return "unknown"
         }
     }

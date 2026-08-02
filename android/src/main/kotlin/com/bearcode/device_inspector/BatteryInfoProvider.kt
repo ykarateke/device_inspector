@@ -49,7 +49,7 @@ class BatteryInfoProvider(private val context: Context) : MethodChannel.MethodCa
 
             info["estimatedMinutesRemaining"] = -1
 
-            result(info)
+            result.success(info)
         } catch (e: Exception) {
             result.error("BATTERY_INFO_ERROR", e.message, null)
         }

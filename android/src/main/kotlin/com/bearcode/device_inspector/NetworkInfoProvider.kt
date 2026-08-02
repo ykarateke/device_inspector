@@ -23,7 +23,7 @@ class NetworkInfoProvider(private val context: Context) : MethodChannel.MethodCa
 
             if (network == null) {
                 info["type"] = "offline"
-                result(info)
+                result.success(info)
                 return
             }
 
@@ -53,7 +53,7 @@ class NetworkInfoProvider(private val context: Context) : MethodChannel.MethodCa
             info["wifiSsid"] = null
             info["localIpAddress"] = null
 
-            result(info)
+            result.success(info)
         } catch (e: Exception) {
             result.error("NETWORK_INFO_ERROR", e.message, null)
         }

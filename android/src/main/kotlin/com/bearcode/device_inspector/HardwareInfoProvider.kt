@@ -59,7 +59,7 @@ class HardwareInfoProvider(private val context: Context) : MethodChannel.MethodC
                 info["display"] = display
                 info["tier"] = determineTier()
 
-                result(info)
+                result.success(info)
             } catch (e: Exception) {
                 result.error("HARDWARE_INFO_ERROR", e.message, null)
             }

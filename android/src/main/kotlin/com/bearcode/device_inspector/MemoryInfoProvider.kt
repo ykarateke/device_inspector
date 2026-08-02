@@ -37,7 +37,7 @@ class MemoryInfoProvider(private val context: Context) : MethodChannel.MethodCal
                     "isLowMemory" to memInfo.lowMemory,
                 )
 
-                result(info)
+                result.success(info)
             } catch (e: Exception) {
                 result.error("MEMORY_INFO_ERROR", e.message, null)
             }

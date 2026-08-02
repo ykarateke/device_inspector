@@ -35,7 +35,7 @@ class StorageInfoProvider(private val context: Context) : MethodChannel.MethodCa
                     "appCachePath" to context.cacheDir?.absolutePath,
                 )
 
-                result(info)
+                result.success(info)
             } catch (e: Exception) {
                 result.error("STORAGE_INFO_ERROR", e.message, null)
             }

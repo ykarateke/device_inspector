@@ -36,7 +36,7 @@ class DeviceInfoProvider(private val context: Context) : MethodChannel.MethodCal
                 info["tier"] = determineTier()
                 info["releaseYear"] = getReleaseYear()
 
-                result(info)
+                result.success(info)
             } catch (e: Exception) {
                 result.error("DEVICE_INFO_ERROR", e.message, null)
             }

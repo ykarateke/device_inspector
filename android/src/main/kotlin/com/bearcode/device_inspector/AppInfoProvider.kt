@@ -40,7 +40,7 @@ class AppInfoProvider(private val context: Context) : MethodChannel.MethodCallHa
                     "isDebugBuild" to ((appInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0),
                 )
 
-                result(info)
+                result.success(info)
             } catch (e: Exception) {
                 result.error("APP_INFO_ERROR", e.message, null)
             }

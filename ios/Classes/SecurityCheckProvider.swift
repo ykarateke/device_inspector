@@ -1,4 +1,6 @@
+import Flutter
 import Foundation
+import MachO
 import UIKit
 
 class SecurityCheckProvider {
