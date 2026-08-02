@@ -5,6 +5,7 @@
 library;
 
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'core/configuration.dart';
 import 'core/device_inspector_core.dart';
@@ -113,7 +114,7 @@ class DeviceInspector {
     _instance._memoryService = MemoryService(bridge: bridge);
     _instance._storageService = StorageService(bridge: bridge);
     _instance._securityService = SecurityService(bridge: bridge);
-    _instance._appService = AppService();
+    _instance._appService = AppService(bridge: bridge);
     _instance._fingerprintService = FingerprintService(bridge: bridge);
 
     if (cfg.enablePerformanceMonitor) {
@@ -146,7 +147,7 @@ class DeviceInspector {
         _memoryService = MemoryService(bridge: bridge);
         _storageService = StorageService(bridge: bridge);
         _securityService = SecurityService(bridge: bridge);
-        _appService = AppService();
+        _appService = AppService(bridge: bridge);
         _fingerprintService = FingerprintService(bridge: bridge);
       } catch (e) {
         throw ConfigurationException('Failed to auto-initialize: $e');
@@ -470,13 +471,9 @@ class DeviceInspector {
 
   /// Runtime platform detection.
   static DevicePlatform get platform {
-    // Simplified — real impl uses `dart:io` Platform or Flutter's
-    // `defaultTargetPlatform`.
     try {
-      if (const bool.fromEnvironment('dart.library.io')) {
-        // On mobile
-        return DevicePlatform.android; // placeholder; refined later
-      }
+      if (Platform.isIOS) return DevicePlatform.iOS;
+      if (Platform.isAndroid) return DevicePlatform.android;
       return DevicePlatform.unknown;
     } catch (_) {
       return DevicePlatform.unknown;

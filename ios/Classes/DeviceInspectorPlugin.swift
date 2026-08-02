@@ -41,6 +41,20 @@ public class DeviceInspectorPlugin: NSObject, FlutterPlugin {
         )
         hardwareChannel.setMethodCallHandler(HardwareInfoProvider().handle)
 
+        // Memory
+        let memoryChannel = FlutterMethodChannel(
+            name: "com.bearcode.device_inspector/memory",
+            binaryMessenger: messenger
+        )
+        memoryChannel.setMethodCallHandler(MemoryInfoProvider().handle)
+
+        // Storage
+        let storageChannel = FlutterMethodChannel(
+            name: "com.bearcode.device_inspector/storage",
+            binaryMessenger: messenger
+        )
+        storageChannel.setMethodCallHandler(StorageInfoProvider().handle)
+
         // Security
         let securityChannel = FlutterMethodChannel(
             name: "com.bearcode.device_inspector/security",
@@ -54,5 +68,12 @@ public class DeviceInspectorPlugin: NSObject, FlutterPlugin {
             binaryMessenger: messenger
         )
         performanceChannel.setMethodCallHandler(PerformanceMonitorProvider().handle)
+
+        // App
+        let appChannel = FlutterMethodChannel(
+            name: "com.bearcode.device_inspector/app",
+            binaryMessenger: messenger
+        )
+        appChannel.setMethodCallHandler(AppInfoProvider().handle)
     }
 }

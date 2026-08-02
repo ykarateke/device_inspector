@@ -1,4 +1,6 @@
 import Foundation
+import Metal
+import UIKit
 
 class HardwareInfoProvider {
 
@@ -9,20 +11,23 @@ class HardwareInfoProvider {
         }
 
         DispatchQueue.global(qos: .userInitiated).async {
-            var info: [String: Any] = [:]
+            let modelIdentifier = DeviceInfoProvider.getModelIdentifier()
 
             // CPU
             var cpu: [String: Any] = [:]
             cpu["name"] = Self.getCPUName()
             cpu["cores"] = ProcessInfo.processInfo.activeProcessorCount
             cpu["architecture"] = Self.getArchitecture()
+            // Apple silicon does not expose clock speed via a public API.
             cpu["maxFrequencyMHz"] = 0
-            cpu["hasNeuralEngine"] = false
+            cpu["hasNeuralEngine"] = Self.hasNeuralEngine(modelIdentifier: modelIdentifier)
 
-            // GPU
+            // GPU — MTLDevice exposes the real chip-specific GPU name (e.g. "Apple A17 Pro GPU").
+            let mtlDevice = MTLCreateSystemDefaultDevice()
             var gpu: [String: Any] = [:]
-            gpu["name"] = "Apple GPU"
-            gpu["supportsMetal"] = true
+            gpu["name"] = mtlDevice?.name ?? "Unknown"
+            gpu["supportsMetal"] = mtlDevice != nil
+            gpu["metalFeatureSet"] = Self.highestMetalGPUFamily(mtlDevice)
             gpu["supportsVulkan"] = false
 
             // Display
@@ -32,21 +37,21 @@ class HardwareInfoProvider {
             display["widthPixels"] = Int(screen.bounds.width * scale)
             display["heightPixels"] = Int(screen.bounds.height * scale)
             display["density"] = Double(scale)
-            display["refreshRate"] = 60
-            display["supportsHdr"] = false
+            display["refreshRate"] = screen.maximumFramesPerSecond
+            display["supportsHdr"] = Self.supportsHdr(screen)
             display["brightnessLevel"] = Double(screen.brightness)
 
+            var info: [String: Any] = [:]
             info["cpu"] = cpu
             info["gpu"] = gpu
             info["display"] = display
-            info["tier"] = "medium"
+            info["tier"] = DeviceInfoProvider.determineTier()
 
             result(info)
         }
     }
 
     static func getCPUName() -> String {
-        // Use sysctl to get the CPU brand string
         var size: size_t = 0
         sysctlbyname("machdep.cpu.brand_string", nil, &size, nil, 0)
         var brand = [CChar](repeating: 0, count: size)
@@ -64,5 +69,40 @@ class HardwareInfoProvider {
 #else
         return "unknown"
 #endif
+    }
+
+    /// Apple's Neural Engine debuted with the A11 Bionic (iPhone 8/8 Plus/X, "iPhoneN,M"
+    /// generation 10+). No public API reports NPU presence directly, so this infers it
+    /// from the numeric device generation encoded in the model identifier.
+    static func hasNeuralEngine(modelIdentifier: String) -> Bool {
+        guard modelIdentifier.hasPrefix("iPhone") else {
+            // Simulators and iPads use different numbering; assume modern hardware.
+            return modelIdentifier.hasPrefix("iPad") || modelIdentifier.contains("64")
+        }
+        let digits = modelIdentifier
+            .dropFirst("iPhone".count)
+            .prefix { $0.isNumber }
+        guard let generation = Int(digits) else { return false }
+        return generation >= 10
+    }
+
+    static func supportsHdr(_ screen: UIScreen) -> Bool {
+        if #available(iOS 16.0, *) {
+            return screen.potentialEDRHeadroom > 1.0
+        }
+        return false
+    }
+
+    static func highestMetalGPUFamily(_ device: MTLDevice?) -> String? {
+        guard let device = device else { return nil }
+        let families: [(MTLGPUFamily, String)] = [
+            (.apple9, "Apple9"), (.apple8, "Apple8"), (.apple7, "Apple7"),
+            (.apple6, "Apple6"), (.apple5, "Apple5"), (.apple4, "Apple4"),
+            (.apple3, "Apple3"), (.apple2, "Apple2"), (.apple1, "Apple1"),
+        ]
+        for (family, name) in families where device.supportsFamily(family) {
+            return name
+        }
+        return nil
     }
 }

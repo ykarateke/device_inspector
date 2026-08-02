@@ -17,6 +17,7 @@ abstract final class Channels {
   static const String storage = '$kChannelPrefix/storage';
   static const String security = '$kChannelPrefix/security';
   static const String performance = '$kChannelPrefix/performance';
+  static const String app = '$kChannelPrefix/app';
 
   /// All registered channel names.
   static const List<String> all = [
@@ -29,6 +30,7 @@ abstract final class Channels {
     storage,
     security,
     performance,
+    app,
   ];
 }
 
@@ -42,6 +44,7 @@ abstract final class Methods {
   static const String getMemoryInfo = 'getMemoryInfo';
   static const String getStorageInfo = 'getStorageInfo';
   static const String getSecurityInfo = 'getSecurityInfo';
+  static const String getAppInfo = 'getAppInfo';
 
   // Performance monitor methods
   static const String getPerformanceSnapshot = 'getPerformanceSnapshot';

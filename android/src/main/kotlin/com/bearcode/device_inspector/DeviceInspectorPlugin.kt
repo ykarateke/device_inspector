@@ -14,6 +14,9 @@ class DeviceInspectorPlugin : FlutterPlugin {
     private lateinit var hardwareProvider: HardwareInfoProvider
     private lateinit var securityProvider: SecurityCheckProvider
     private lateinit var performanceProvider: PerformanceMonitorProvider
+    private lateinit var memoryProvider: MemoryInfoProvider
+    private lateinit var storageProvider: StorageInfoProvider
+    private lateinit var appProvider: AppInfoProvider
 
     override fun onAttachedToEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         val context = binding.applicationContext
@@ -52,6 +55,21 @@ class DeviceInspectorPlugin : FlutterPlugin {
         performanceProvider = PerformanceMonitorProvider(context)
         val performanceChannel = MethodChannel(binding.binaryMessenger, "com.bearcode.device_inspector/performance")
         performanceChannel.setMethodCallHandler(performanceProvider)
+
+        // Memory
+        memoryProvider = MemoryInfoProvider(context)
+        val memoryChannel = MethodChannel(binding.binaryMessenger, "com.bearcode.device_inspector/memory")
+        memoryChannel.setMethodCallHandler(memoryProvider)
+
+        // Storage
+        storageProvider = StorageInfoProvider(context)
+        val storageChannel = MethodChannel(binding.binaryMessenger, "com.bearcode.device_inspector/storage")
+        storageChannel.setMethodCallHandler(storageProvider)
+
+        // App
+        appProvider = AppInfoProvider(context)
+        val appChannel = MethodChannel(binding.binaryMessenger, "com.bearcode.device_inspector/app")
+        appChannel.setMethodCallHandler(appProvider)
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {

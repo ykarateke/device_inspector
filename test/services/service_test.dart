@@ -198,11 +198,25 @@ void main() {
   });
 
   group('AppService', () {
-    test('fetch returns AppInfo stub', () async {
-      final service = AppService();
+    test('fetch returns AppInfo from platform response', () async {
+      bridge.stub('app', 'getAppInfo', {
+        'appName': 'Device Inspector Example',
+        'version': '1.2.3',
+        'buildNumber': '42',
+        'bundleId': 'com.bearcode.device_inspector_example',
+        'isDebugBuild': true,
+      });
+      final service = AppService(bridge: bridge);
       final info = await service.fetch();
-      expect(info.appName, isNotEmpty);
-      expect(info.bundleId, isNotEmpty);
+      expect(info.appName, 'Device Inspector Example');
+      expect(info.bundleId, 'com.bearcode.device_inspector_example');
+      expect(bridge.calls, contains('app.getAppInfo'));
+    });
+
+    test('fetch returns unknown on error', () async {
+      final service = AppService(bridge: bridge);
+      final info = await service.fetch();
+      expect(info.appName, 'Unknown');
     });
   });
 }
